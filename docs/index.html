@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi PPh 21 TER (PP 58/2023) - Web Terminal</title>
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: #161b22;
+      --border-color: #30363d;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
+      --green: #3fb950;
+      --cyan: #58a6ff;
+      --yellow: #d29922;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', Courier, monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .terminal-window {
+      width: 100%;
+      max-width: 680px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .terminal-header {
+      background-color: #21262d;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 8px;
+      margin-right: 16px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background-color: #ff5f56; }
+    .dot.yellow { background-color: #ffbd2e; }
+    .dot.green { background-color: #27c93f; }
+
+    .terminal-title {
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    .terminal-body {
+      padding: 20px;
+    }
+
+    .banner {
+      color: var(--green);
+      font-size: 13px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      margin-bottom: 20px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      color: var(--cyan);
+      font-size: 14px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .prompt-row {
+      display: flex;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      transition: border-color 0.2s;
+    }
+
+    .prompt-row:focus-within {
+      border-color: var(--cyan);
+    }
+
+    .prompt-sign {
+      color: var(--green);
+      font-weight: bold;
+      margin-right: 10px;
+      user-select: none;
+    }
+
+    select, input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 15px;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    select option {
+      background-color: var(--card-bg);
+      color: #fff;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    button.secondary {
+      background-color: #30363d;
+      flex: 0 0 100px;
+    }
+
+    button.secondary:hover {
+      background-color: #3c444d;
+    }
+
+    .result-box {
+      margin-top: 24px;
+      padding: 16px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 14px;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+    }
+
+    .result-row.highlight {
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 0;
+      margin: 8px 0;
+      font-weight: bold;
+    }
+
+    .tax-val {
+      color: #ff7b72;
+    }
+
+    .net-val {
+      color: var(--green);
+      font-size: 16px;
+    }
+
+    .source-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="terminal-title">bash - pph21_ter_simulator.sh</div>
+    </div>
+
+    <div class="terminal-body">
+      <div class="banner">==================================================
+        SIMULASI PPh 21 TER (PP 58/2023)
+==================================================
+Kalkulator Tarif Efektif Rata-Rata Bulanan</div>
+
+      <form id="taxForm" onsubmit="calculateTax(event)">
+        <div class="form-group">
+          <label>1. Pilih Jenis PTKP:</label>
+          <div class="prompt-row">
+            <span class="prompt-sign">&gt;</span>
+            <select id="ptkpSelect" required>
+              <optgroup label="Kategori TER A">
+                <option value="TK/0" selected>TK/0 (Tidak Kawin, 0 Tanggungan)</option>
+                <option value="TK/1">TK/1 (Tidak Kawin, 1 Tanggungan)</option>
+                <option value="K/0">K/0 (Kawin, 0 Tanggungan)</option>
+              </optgroup>
+              <optgroup label="Kategori TER B">
+                <option value="TK/2">TK/2 (Tidak Kawin, 2 Tanggungan)</option>
+                <option value="TK/3">TK/3 (Tidak Kawin, 3 Tanggungan)</option>
+                <option value="K/1">K/1 (Kawin, 1 Tanggungan)</option>
+                <option value="K/2">K/2 (Kawin, 2 Tanggungan)</option>
+              </optgroup>
+              <optgroup label="Kategori TER C">
+                <option value="K/3">K/3 (Kawin, 3 Tanggungan)</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>2. Masukkan Penghasilan Bruto (Rp):</label>
+          <div class="prompt-row">
+            <span class="prompt-sign">&gt;</span>
+            <input type="text" id="brutoInput" placeholder="Contoh: 10.000.000 atau 6000000" autocomplete="off" required>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit">Hitung PPh 21 [Enter]</button>
+          <button type="button" class="secondary" onclick="resetForm()">Reset</button>
+        </div>
+      </form>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-row">
+          <span>Status PTKP:</span>
+          <span id="resPtkp" style="color: #fff; font-weight: bold;">-</span>
+        </div>
+        <div class="result-row">
+          <span>Kategori TER:</span>
+          <span id="resKategori" style="color: var(--cyan); font-weight: bold;">-</span>
+        </div>
+        <div class="result-row">
+          <span>Penghasilan Bruto:</span>
+          <span id="resBruto">-</span>
+        </div>
+        <div class="result-row">
+          <span>Tarif Efektif:</span>
+          <span id="resTarif" style="color: var(--yellow); font-weight: bold;">-</span>
+        </div>
+        <div class="result-row highlight">
+          <span>Pajak Terutang (PPh 21):</span>
+          <span id="resPajak" class="tax-val">-</span>
+        </div>
+        <div class="result-row highlight">
+          <span>Gaji Bersih (Netto):</span>
+          <span id="resNetto" class="net-val">-</span>
+        </div>
+        <div class="source-tag" id="resSource">Sumber: Regulasi Resmi PP 58/2023</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Kalkulator PPh 21 TER &bull; Siap dibuka di Chrome, Edge, Safari, dan HP
+  </div>
+
+  <script>
+    // Format input rupiah otomatis saat mengetik
+    const brutoInput = document.getElementById('brutoInput');
+    brutoInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/[^0-9]/g, '');
+      if (value) {
+        e.target.value = new Intl.NumberFormat('id-ID').format(value);
+      }
+    });
+
+    function getKategoriTer(ptkp) {
+      if (['TK/0', 'TK/1', 'K/0'].includes(ptkp)) return 'A';
+      if (['TK/2', 'TK/3', 'K/1', 'K/2'].includes(ptkp)) return 'B';
+      if (['K/3'].includes(ptkp)) return 'C';
+      return 'A';
+    }
+
+    function getTarifTerA(b) {
+      if (b <= 5400000) return 0.0000;
+      if (b <= 5650000) return 0.0025;
+      if (b <= 5950000) return 0.0050;
+      if (b <= 6300000) return 0.0075;
+      if (b <= 6750000) return 0.0100;
+      if (b <= 7500000) return 0.0125;
+      if (b <= 8550000) return 0.0150;
+      if (b <= 9650000) return 0.0175;
+      if (b <= 10050000) return 0.0200;
+      if (b <= 10350000) return 0.0225;
+      if (b <= 10700000) return 0.0250;
+      if (b <= 11050000) return 0.0300;
+      if (b <= 11600000) return 0.0350;
+      if (b <= 12500000) return 0.0400;
+      if (b <= 13750000) return 0.0500;
+      if (b <= 15100000) return 0.0600;
+      if (b <= 16950000) return 0.0700;
+      if (b <= 19750000) return 0.0800;
+      if (b <= 24150000) return 0.0900;
+      if (b <= 26450000) return 0.1000;
+      if (b <= 28000000) return 0.1100;
+      if (b <= 30050000) return 0.1200;
+      if (b <= 32400000) return 0.1300;
+      if (b <= 35400000) return 0.1400;
+      if (b <= 39100000) return 0.1500;
+      if (b <= 43850000) return 0.1600;
+      if (b <= 47800000) return 0.1700;
+      if (b <= 51400000) return 0.1800;
+      if (b <= 56300000) return 0.1900;
+      if (b <= 62200000) return 0.2000;
+      if (b <= 68600000) return 0.2100;
+      if (b <= 77500000) return 0.2200;
+      if (b <= 89000000) return 0.2300;
+      if (b <= 103000000) return 0.2400;
+      if (b <= 125000000) return 0.2500;
+      if (b <= 157000000) return 0.2600;
+      if (b <= 206000000) return 0.2700;
+      if (b <= 337000000) return 0.2800;
+      if (b <= 454000000) return 0.2900;
+      if (b <= 550000000) return 0.3000;
+      if (b <= 695000000) return 0.3100;
+      if (b <= 910000000) return 0.3200;
+      if (b <= 1400000000) return 0.3300;
+      return 0.3400;
+    }
+
+    function getTarifTerB(b) {
+      if (b <= 6200000) return 0.0000;
+      if (b <= 6500000) return 0.0025;
+      if (b <= 6850000) return 0.0050;
+      if (b <= 7300000) return 0.0075;
+      if (b <= 9200000) return 0.0100;
+      if (b <= 10750000) return 0.0150;
+      if (b <= 11250000) return 0.0200;
+      if (b <= 11600000) return 0.0250;
+      if (b <= 12600000) return 0.0300;
+      if (b <= 13600000) return 0.0400;
+      if (b <= 14950000) return 0.0500;
+      if (b <= 16400000) return 0.0600;
+      if (b <= 18450000) return 0.0700;
+      if (b <= 21850000) return 0.0800;
+      if (b <= 26000000) return 0.0900;
+      if (b <= 27700000) return 0.1000;
+      if (b <= 29350000) return 0.1100;
+      if (b <= 31450000) return 0.1200;
+      if (b <= 33950000) return 0.1300;
+      if (b <= 37100000) return 0.1400;
+      if (b <= 41100000) return 0.1500;
+      if (b <= 45800000) return 0.1600;
+      if (b <= 49500000) return 0.1700;
+      if (b <= 53800000) return 0.1800;
+      if (b <= 58500000) return 0.1900;
+      if (b <= 64000000) return 0.2000;
+      if (b <= 71000000) return 0.2100;
+      if (b <= 80000000) return 0.2200;
+      if (b <= 93000000) return 0.2300;
+      if (b <= 109000000) return 0.2400;
+      if (b <= 129000000) return 0.2500;
+      if (b <= 163000000) return 0.2600;
+      if (b <= 211000000) return 0.2700;
+      if (b <= 374000000) return 0.2800;
+      if (b <= 459000000) return 0.2900;
+      if (b <= 555000000) return 0.3000;
+      if (b <= 704000000) return 0.3100;
+      if (b <= 957000000) return 0.3200;
+      if (b <= 1405000000) return 0.3300;
+      return 0.3400;
+    }
+
+    function getTarifTerC(b) {
+      if (b <= 6600000) return 0.0000;
+      if (b <= 6950000) return 0.0025;
+      if (b <= 7350000) return 0.0050;
+      if (b <= 7800000) return 0.0075;
+      if (b <= 8850000) return 0.0100;
+      if (b <= 10700000) return 0.0150;
+      if (b <= 11250000) return 0.0200;
+      if (b <= 11600000) return 0.0250;
+      if (b <= 12600000) return 0.0300;
+      if (b <= 13600000) return 0.0400;
+      if (b <= 14950000) return 0.0500;
+      if (b <= 16400000) return 0.0600;
+      if (b <= 18450000) return 0.0700;
+      if (b <= 21850000) return 0.0800;
+      if (b <= 26000000) return 0.0900;
+      if (b <= 27700000) return 0.1000;
+      if (b <= 29350000) return 0.1100;
+      if (b <= 31450000) return 0.1200;
+      if (b <= 33950000) return 0.1300;
+      if (b <= 37100000) return 0.1400;
+      if (b <= 41100000) return 0.1500;
+      if (b <= 45800000) return 0.1600;
+      if (b <= 49500000) return 0.1700;
+      if (b <= 53800000) return 0.1800;
+      if (b <= 58500000) return 0.1900;
+      if (b <= 64000000) return 0.2000;
+      if (b <= 71000000) return 0.2100;
+      if (b <= 80000000) return 0.2200;
+      if (b <= 93000000) return 0.2300;
+      if (b <= 109000000) return 0.2400;
+      if (b <= 129000000) return 0.2500;
+      if (b <= 163000000) return 0.2600;
+      if (b <= 211000000) return 0.2700;
+      if (b <= 374000000) return 0.2800;
+      if (b <= 459000000) return 0.2900;
+      if (b <= 555000000) return 0.3000;
+      if (b <= 704000000) return 0.3100;
+      if (b <= 957000000) return 0.3200;
+      if (b <= 1405000000) return 0.3300;
+      return 0.3400;
+    }
+
+    function formatRupiah(num) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    }
+
+    function calculateTax(e) {
+      e.preventDefault();
+      const ptkp = document.getElementById('ptkpSelect').value;
+      const rawBruto = document.getElementById('brutoInput').value.replace(/[^0-9]/g, '');
+      const bruto = parseFloat(rawBruto);
+
+      if (isNaN(bruto) || bruto <= 0) {
+        alert('Harap masukkan nominal bruto yang valid!');
+        return;
+      }
+
+      const kategori = getKategoriTer(ptkp);
+      let tarifDesimal = 0;
+      if (kategori === 'A') tarifDesimal = getTarifTerA(bruto);
+      else if (kategori === 'B') tarifDesimal = getTarifTerB(bruto);
+      else tarifDesimal = getTarifTerC(bruto);
+
+      const pajak = Math.round(bruto * tarifDesimal);
+      const netto = bruto - pajak;
+      const tarifPersen = (tarifDesimal * 100).toFixed(2);
+
+      document.getElementById('resPtkp').innerText = ptkp;
+      document.getElementById('resKategori').innerText = 'TER ' + kategori;
+      document.getElementById('resBruto').innerText = formatRupiah(bruto);
+      document.getElementById('resTarif').innerText = tarifPersen + '%';
+      document.getElementById('resPajak').innerText = formatRupiah(pajak);
+      document.getElementById('resNetto').innerText = formatRupiah(netto);
+
+      const resultBox = document.getElementById('resultBox');
+      resultBox.style.display = 'block';
+      resultBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('taxForm').reset();
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('brutoInput').focus();
+    }
+  </script>
+</body>
+</html>

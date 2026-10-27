@@ -1,0 +1,18 @@
+name: dummy_perhitungan
+description: A sample command-line application with basic argument parsing.
+version: 0.0.1
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.12.2
+
+# Add regular dependencies here.
+dependencies:
+  args: ^2.7.0
+  dotenv: ^4.2.0
+  http: ^1.6.0
+  supabase: ^2.16.1
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6
